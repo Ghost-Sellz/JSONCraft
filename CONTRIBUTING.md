@@ -34,7 +34,7 @@ Thanks for your interest in contributing to JSONCraft! This project is a browser
 ## Ways to Contribute
 
 - 🐛 Fix a bug
-- ✨ Add a new language generator (Go, Rust, Java, Kotlin, Zod, Prisma, etc.)
+- ✨ Add a new language generator
 - 🎨 Improve the UI or CSS
 - 📝 Improve documentation
 - 🧪 Add or improve JSON test cases
