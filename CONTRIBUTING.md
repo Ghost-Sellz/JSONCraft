@@ -24,7 +24,8 @@ Thanks for your interest in contributing to JSONCraft! This project is a browser
 1. **Fork** the repository on GitHub
 2. **Clone** your fork locally:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/JSONCraft.git
+   git clone https://github.com/ghost-sellz/JSONCraft.git
+
    cd JSONCraft
    ```
 3. Open `index.html` in your browser — no build step or dependencies required.
