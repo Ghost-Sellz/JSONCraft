@@ -14,8 +14,6 @@ body {
   padding: 30px;
 }
 
-/* ── Header ── */
-
 .header {
   display: flex;
   justify-content: space-between;
@@ -35,8 +33,6 @@ body {
   gap: 8px;
   flex-wrap: wrap;
 }
-
-/* ── Grid ── */
 
 .grid {
   display: grid;
@@ -61,8 +57,6 @@ body {
   justify-content: space-between;
   align-items: center;
 }
-
-/* ── Textarea & Pre ── */
 
 textarea {
   width: 100%;
@@ -95,8 +89,6 @@ pre {
   transition: background 0.3s, color 0.3s;
 }
 
-/* ── Tabs ── */
-
 .tabs {
   display: flex;
   gap: 6px;
@@ -125,15 +117,11 @@ pre {
   color: white;
 }
 
-/* ── Actions ── */
-
 .actions {
   display: flex;
   gap: 10px;
   margin-top: 10px;
 }
-
-/* ── Buttons ── */
 
 button {
   border: none;
@@ -162,8 +150,6 @@ button:active { opacity: .75; }
   opacity: 1;
 }
 
-/* ── Live toggle button ── */
-
 .toggle-btn {
   background: #1f2937;
 }
@@ -172,16 +158,12 @@ button:active { opacity: .75; }
   background: #059669;
 }
 
-/* ── Status ── */
-
 .status {
   margin-top: 8px;
   font-size: 12px;
   font-family: "JetBrains Mono", monospace;
   min-height: 18px;
 }
-
-/* ── URL bar ── */
 
 .url-bar {
   display: flex;
@@ -217,8 +199,6 @@ button:active { opacity: .75; }
   padding: 8px 10px;
 }
 
-/* ── Drop overlay ── */
-
 .drop-overlay {
   display: none;
   position: absolute;
@@ -245,8 +225,6 @@ button:active { opacity: .75; }
   color: #818cf8;
 }
 
-/* ── Toast ── */
-
 .toast {
   position: fixed;
   bottom: 28px;
@@ -271,16 +249,12 @@ button:active { opacity: .75; }
   transform: translateX(-50%) translateY(0);
 }
 
-/* ── Footer ── */
-
 .foot {
   text-align: center;
   margin-top: 25px;
   opacity: .4;
   font-size: 14px;
 }
-
-/* ── Light theme ── */
 
 .light {
   background: #f1f5f9;
@@ -333,8 +307,6 @@ button:active { opacity: .75; }
   border-color: #cbd5e1;
   color: #0f172a;
 }
-
-/* ── Responsive ── */
 
 @media (max-width: 800px) {
   .grid {
