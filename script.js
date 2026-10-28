@@ -44,6 +44,7 @@ function walk(obj, name, models) {
 
 function buildModels(data) {
   let models = {}
+  if (Array.isArray(data)) data = data.find(x => x && typeof x === "object" && !Array.isArray(x))
   walk(data, "Model", models)
   return models
 }
@@ -67,7 +68,7 @@ function makeTS(models) {
 
 function makePython(models) {
   let out = "from dataclasses import dataclass\nfrom typing import List, Optional, Any\n\n"
-  let keys = Object.keys(models).reverse()
+  let keys = Object.keys(models)
   keys.forEach(m => {
     out += `@dataclass\nclass ${m}:\n`
     models[m].forEach(f => {
@@ -201,7 +202,7 @@ function makeRust(models) {
 
 
 function makeJava(models) {
-  let out = ""
+  let out = "import java.util.List;\n\n"
   for (let m in models) {
     out += `public class ${m} {\n\n`
 
@@ -271,7 +272,7 @@ function makeKotlin(models) {
 
 function makeZod(models) {
   let out = 'import { z } from "zod"\n\n'
-  let keys = Object.keys(models).reverse()
+  let keys = Object.keys(models)
   keys.forEach(m => {
     let varName = m.charAt(0).toLowerCase() + m.slice(1) + "Schema"
     out += `const ${varName} = z.object({\n`
@@ -324,13 +325,30 @@ function makePrisma(models) {
 }
 
 
+const NAMES = { ts: "TypeScript", python: "Python", graphql: "GraphQL", sql: "SQL", go: "Go", rust: "Rust", java: "Java", kotlin: "Kotlin", zod: "Zod", prisma: "Prisma" }
+
+function setStatus(kind, msg) {
+  let el = document.getElementById("status")
+  el.className = "status" + (kind ? " " + kind : "")
+  el.textContent = msg
+}
+
+function describeError(e, text) {
+  let m = /position (\d+)/.exec(e.message)
+  if (m) {
+    let pos = +m[1], before = text.slice(0, pos).split("\n")
+    return `Line ${before.length}, column ${before[before.length - 1].length + 1}: ${e.message.replace(/ \(line.*\)/, "")}`
+  }
+  return e.message
+}
+
 function convert() {
   let text = document.getElementById("json").value.trim()
-  let status = document.getElementById("status")
   let output = document.getElementById("output")
+  document.getElementById("target").textContent = NAMES[current]
 
   if (!text) {
-    status.textContent = ""
+    setStatus("", "")
     output.textContent = ""
     return
   }
@@ -338,18 +356,21 @@ function convert() {
   let obj
   try {
     obj = JSON.parse(text)
-    status.textContent = "✓ Valid JSON"
-    status.style.color = "#4ade80"
   } catch (e) {
-    status.textContent = "✗ Invalid JSON — " + e.message
-    status.style.color = "#f87171"
+    setStatus("err", "Invalid JSON. " + describeError(e, text))
     output.textContent = ""
     return
   }
 
   let models = buildModels(obj)
-  let result = ""
+  if (!Object.keys(models).length) {
+    setStatus("err", "Valid JSON, but the root must be an object or an array of objects to generate types.")
+    output.textContent = ""
+    return
+  }
+  setStatus("ok", "Valid JSON · " + Object.keys(models).length + (Object.keys(models).length === 1 ? " model" : " models") + " detected")
 
+  let result = ""
   if (current === "ts")      result = makeTS(models)
   if (current === "python")  result = makePython(models)
   if (current === "graphql") result = makeGraph(models)
@@ -369,8 +390,15 @@ document.querySelectorAll(".tabs button").forEach(b => {
   b.onclick = function () {
     document.querySelectorAll(".tabs button").forEach(x => x.classList.remove("active"))
     this.classList.add("active")
+    document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-selected", x === this))
     current = this.dataset.tab
+    this.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" })
+    moveIndicator()
     convert()
+    let out = document.getElementById("output")
+    out.classList.remove("swap")
+    void out.offsetWidth
+    out.classList.add("swap")
   }
 })
 
@@ -380,8 +408,10 @@ document.getElementById("convert").onclick = convert
 document.getElementById("copy").onclick = function () {
   let t = document.getElementById("output").textContent
   if (!t) return
-  navigator.clipboard.writeText(t)
-  showToast("Copied to clipboard!")
+  navigator.clipboard.writeText(t).then(
+    () => showToast("Copied " + NAMES[current] + " to clipboard"),
+    () => showToast("Copy blocked by the browser. Select the output and copy manually.")
+  )
 }
 
 document.getElementById("download").onclick = function () {
@@ -394,6 +424,7 @@ document.getElementById("download").onclick = function () {
   a.href = URL.createObjectURL(blob)
   a.download = `model.${ext}`
   a.click()
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000)
 }
 
 document.getElementById("format").onclick = function () {
@@ -401,16 +432,19 @@ document.getElementById("format").onclick = function () {
   try {
     let obj = JSON.parse(t.value)
     t.value = JSON.stringify(obj, null, 2)
-    showToast("JSON formatted!")
+    showToast("JSON formatted")
+    convert()
   } catch {
-    showToast("Invalid JSON — cannot format")
+    showToast("Can't format: the JSON is invalid")
+    convert()
   }
 }
 
 document.getElementById("clear").onclick = function () {
   document.getElementById("json").value = ""
   document.getElementById("output").textContent = ""
-  document.getElementById("status").textContent = ""
+  setStatus("", "")
+  document.getElementById("json").focus()
 }
 
 document.getElementById("sample").onclick = function () {
@@ -533,3 +567,49 @@ function showToast(msg) {
   clearTimeout(t._timer)
   t._timer = setTimeout(() => t.classList.remove("show"), 2200)
 }
+
+
+document.getElementById("minify").onclick = function () {
+  let t = document.getElementById("json")
+  try {
+    t.value = JSON.stringify(JSON.parse(t.value))
+    showToast("JSON minified")
+  } catch {
+    showToast("Can't minify: the JSON is invalid")
+  }
+  convert()
+}
+
+document.getElementById("hero-open").onclick = function () {
+  document.getElementById("workspace").scrollIntoView({ behavior: "smooth", block: "start" })
+  document.getElementById("json").focus({ preventScroll: true })
+}
+
+document.getElementById("hero-example").onclick = function () {
+  document.getElementById("sample").onclick()
+  document.getElementById("workspace").scrollIntoView({ behavior: "smooth", block: "start" })
+}
+
+try {
+  if (localStorage.getItem("jsoncraft-theme") === "light") document.body.classList.add("light")
+} catch {}
+document.getElementById("theme").addEventListener("click", function () {
+  try { localStorage.setItem("jsoncraft-theme", document.body.classList.contains("light") ? "light" : "dark") } catch {}
+})
+
+liveMode = true
+document.getElementById("live-toggle").classList.add("active")
+document.getElementById("sample").onclick()
+
+
+function moveIndicator() {
+  let a = document.querySelector(".tabs button.active")
+  let ind = document.getElementById("indicator")
+  if (!a || !ind) return
+  ind.style.width = a.offsetWidth + "px"
+  ind.style.transform = `translateX(${a.offsetLeft}px)`
+}
+
+moveIndicator()
+window.addEventListener("resize", moveIndicator)
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(moveIndicator)
